@@ -18,5 +18,8 @@ def step_click_login(context):
 
 @then('I should see an error message "{expected_error}"')
 def step_verify_error(context, expected_error):
-    actual_error = context.driver.find_element(By.ID, "Invalid Credentials").text
-    assert actual_error == expected_error, f"Expected '{expected_error}', but got '{actual_error}'"
+    actual_error = context.driver.find_element(
+        By.ID, "errorMsg"
+    ).text
+
+    assert actual_error == expected_error
