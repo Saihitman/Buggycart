@@ -74,7 +74,7 @@ def login():
     pword = request.form.get('password')
     
     # 🐛 BUG #1: Accepts ANY password for 'user' instead of checking 'pass123'
-    if uname == 'user':  
+    if uname == 'user' and pword == 'pass123':
         session['username'] = uname
         session['cart_count'] = 0
         session['total_price'] = 0.0
