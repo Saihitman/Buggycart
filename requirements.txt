@@ -1,0 +1,6 @@
+Flask
+selenium
+behave
+opencv-python
+numpy
+mss
