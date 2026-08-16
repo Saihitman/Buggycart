@@ -14,12 +14,10 @@ def record_screen():
     global recording, out
 
     with mss() as sct:
-        # Get primary monitor resolution
         monitor = sct.monitors[1]
         width = monitor["width"]
         height = monitor["height"]
 
-        # Define codec and VideoWriter (MP4 format)
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         out = cv2.VideoWriter(
             "test_execution.mp4",
@@ -29,23 +27,21 @@ def record_screen():
         )
 
         while recording:
-            # Capture screen frame
             sct_img = sct.grab(monitor)
             frame = np.array(sct_img)
-
-            # Convert BGRA to BGR for OpenCV
             frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-
             out.write(frame)
 
 
 def before_scenario(context, scenario):
     global recording
 
-    # GitHub Actions provides CI=true.
-    # Screen recording is only required when running locally.
-    if not os.getenv("CI"):
+    is_ci = os.getenv("CI", "").lower() == "true"
+
+    # Start screen recording only when running locally
+    if not is_ci:
         recording = True
+
         thread = threading.Thread(
             target=record_screen,
             daemon=True
@@ -53,18 +49,18 @@ def before_scenario(context, scenario):
         thread.start()
 
     # Configure Chrome
-    if os.getenv("CI"):
-        # GitHub Actions / CI environment
+    if is_ci:
         options = webdriver.ChromeOptions()
+
         options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
         options.add_argument("--window-size=1920,1080")
 
         context.driver = webdriver.Chrome(options=options)
 
     else:
-        # Local Windows execution
         context.driver = webdriver.Chrome()
         context.driver.maximize_window()
 
@@ -74,8 +70,10 @@ def before_scenario(context, scenario):
 def after_scenario(context, scenario):
     global recording, out
 
+    is_ci = os.getenv("CI", "").lower() == "true"
+
     # Stop recording only when running locally
-    if not os.getenv("CI"):
+    if not is_ci:
         recording = False
 
     # Close browser
@@ -83,7 +81,7 @@ def after_scenario(context, scenario):
         context.driver.quit()
 
     # Finalize recording only when running locally
-    if not os.getenv("CI") and out is not None:
+    if not is_ci and out is not None:
         out.release()
         out = None
 
